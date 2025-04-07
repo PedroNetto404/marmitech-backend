@@ -36,11 +36,11 @@ type (
 	}
 
 	RestaurantSettings struct {
-		ShowCnpjInReceipt bool                 `json:"show_cnpj_in_receipt"`
-		WeeklySchedule    types.WeeklySchedule `json:"weekly_schedule"`
-		Delivery          DeliveryConfig       `json:"delivery"`
-		Ecommerce         EcommerceFeatures    `json:"ecommerce"`
-		PostPaid          PostPaidFeatures     `json:"post_paid"`
+		ShowCnpjInReceipt      bool                 `json:"show_cnpj_in_receipt"`
+		WeeklySchedule         types.WeeklySchedule `json:"weekly_schedule"`
+		Delivery               DeliveryConfig       `json:"delivery"`
+		Ecommerce              EcommerceFeatures    `json:"ecommerce"`
+		CustomerPostPaidOrders PostPaidFeatures     `json:"customer_post_paid_orders"`
 	}
 
 	Restaurant struct {
