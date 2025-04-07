@@ -1,22 +1,20 @@
 version: "3.8"
 
 services:
-  app:
-    build: .
-    container_name: app
+  mysql:
+    image: mysql:latest
+    container_name: mysql
+    environment:
+      - MYSQL_ROOT_PASSWORD=marmitech_strong_password1235r43@!$
+      - MYSQL_DATABASE=marmitech_db
+      - MYSQL_USER=marmitech_user
+      - MYSQL_PASSWORD=marmitech_strong_password1
     ports:
-      - "8080:8080"
-    depends_on:
-      - mongo
-      - keycloak
-
-  mongo:
-    image: mongo:latest
-    container_name: mongo
-    ports:
-      - "27017:27017"
+      - "3306:3306"
+    networks:
+      - backend
     volumes:
-      - mongo_data:/data/db
+      - mysql_data:/var/lib/mysql
 
   keycloak:
     image: quay.io/keycloak/keycloak:latest
@@ -27,6 +25,13 @@ services:
     ports:
       - "8081:8080"
     command: ["start-dev"]
+    networks:
+      - backend
 
 volumes:
-  mongo_data:
+  mysql_data:
+    driver: local
+
+networks:
+  backend:
+    driver: bridge

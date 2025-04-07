@@ -1,116 +1,58 @@
 package config
 
 import (
-	"bufio"
-	"errors"
 	"fmt"
-	"log"
 	"os"
-	"reflect"
-	"strings"
+
+	"github.com/codingconcepts/env"
+	"github.com/joho/godotenv"
 )
 
-type env struct {
-	ApiHost         string `env:"API_HOST"`
-	ApiPort         string `env:"API_PORT" default:"8080"`
-	ApiRouteTimeout string `env:"API_ROUTE_TIMEOUT" default:"10000"`
-	DocEnabled      string `env:"DOC_ENABLED"`
-	AuthEnabled     string `env:"AUTH_ENABLED"`
-
-	MongoUrl string `env:"MONGO_URL"`
-	MongoDb  string `env:"MONGO_DB"`
-
-	RedisHost     string `env:"REDIS_HOST"`
-	RedisPort     string `env:"REDIS_PORT"`
-	RedisPassword string `env:"REDIS_PASSWORD"`
-	RedisDB       string `env:"REDIS_DB"`
-
+type environtment struct {
+	ApiHost           string `env:"API_HOST"`
+	ApiPort           string `env:"API_PORT" default:"8080"`
+	ApiRouteTimeout   string `env:"API_ROUTE_TIMEOUT" default:"10000"`
+	ApiBasePath       string `env:"API_BASE_PATH" default:"/api/v1"`
+	DocEnabled        string `env:"DOC_ENABLED"`
+	AuthEnabled       string `env:"AUTH_ENABLED"`
 	KeycloakIssuerUrl string `env:"KEYCLOAK_ISSUER_URL"`
 	KeycloakClientId  string `env:"KEYCLOAK_CLIENT_ID"`
+	MySqlHost         string `env:"MYSQL_HOST"`
+	MySqlPort         string `env:"MYSQL_PORT"`
+	MySqlDatabase     string `env:"MYSQL_DATABASE"`
+	MySqlUser         string `env:"MYSQL_USER"`
+	MySqlPass         string `env:"MYSQL_PASS"`
 }
 
-func (e *env) IsDocEnabled() bool {
+var Env environtment
+
+func (e *environtment) IsDocEnabled() bool {
 	return e.DocEnabled == "true"
 }
 
-func (e *env) IsAuthEnabled() bool {
+func (e *environtment) IsAuthEnabled() bool {
 	return e.AuthEnabled == "true"
 }
 
 func LoadEnvs() {
-	loadEnvFile()
-
-	if err := loadEnvVars(); err != nil {
-		log.Fatalf("failed to load environment variables: %v", err)
-	}
-}
-
-var Env env
-
-func loadEnvFile() {
-	environment := os.Getenv("ENV")
-	if environment == "" {
-		environment = "development"
+	goEnv := os.Getenv("ENV")
+	if goEnv == "" {
+		goEnv = "development"
 	}
 
-	envPath := fmt.Sprintf(".env.%s", environment)
+	var envPath string
 
-	file, err := os.Open(envPath)
-	if err != nil {
-		log.Fatal()
-	}
-	defer file.Close()
-
-	scanner := bufio.NewScanner(file)
-
-	for scanner.Scan() {
-		line := scanner.Text()
-
-		keyValue := strings.SplitN(line, "=", 2)
-		if len(keyValue) != 2 {
-			log.Fatalf("invalid env line: %s", line)
-		}
-		key, value := keyValue[0], keyValue[1]
-
-		if key == "" {
-			log.Fatal("invalid env key")
-		}
-
-		os.Setenv(key, value)
-	}
-}
-
-func loadEnvVars() error {
-	v := reflect.ValueOf(&Env)
-	if v.Kind() != reflect.Ptr || v.Elem().Kind() != reflect.Struct {
-		return errors.New("target must be a pointer to a struct")
+	if os.Getenv("DEBUG") == "true" {
+		envPath = fmt.Sprintf("../../.env.%s", goEnv)
+	} else {
+		envPath = fmt.Sprintf(".env.%s", goEnv)
 	}
 
-	v = v.Elem()
-	t := v.Type()
-
-	for i := 0; i < t.NumField(); i++ {
-		field := t.Field(i)
-		envTag := field.Tag.Get("env")
-		if envTag == "" {
-			continue
-		}
-
-		value := os.Getenv(envTag)
-		if value == "" {
-			defaultValue := field.Tag.Get("default")
-			if defaultValue != "" {
-				value = defaultValue
-			}
-		}
-
-		if value != "" {
-			fieldValue := v.Field(i)
-			if fieldValue.CanSet() {
-				fieldValue.Set(reflect.ValueOf(value))
-			}
-		}
+	if err := godotenv.Load(envPath); err != nil {
+		panic(fmt.Errorf("failed to load env file: %v", err))
 	}
 
-	return nil
+	if err := env.Set(&Env); err != nil {
+		panic(fmt.Errorf("failed to parse env: %v", err))
+	}
 }

@@ -46,14 +46,47 @@ type (
 	Restaurant struct {
 		abstractions.AggregateRoot
 
-		TradeName    string             `json:"trade_name"`
-		LegalName    string             `json:"legal_name"`
-		Cnpj         string             `json:"cnpj"`
-		ContactPhone string             `json:"contact_phone"`
-		Slug         string             `json:"slug"`
-		Address      types.Address      `json:"address"`
-		LogoUrl      string             `json:"logo_url"`
-		BannerUrl    string             `json:"banner_url"`
-		Settings     RestaurantSettings `json:"settings"`
+		TradeName     string             `json:"trade_name"`
+		LegalName     string             `json:"legal_name"`
+		CNPJ          string             `json:"cnpj"`
+		ContactPhone  string             `json:"contact_phone"`
+		WhatsAppPhone string             `json:"whatsapp_phone"`
+		Email         string             `json:"email"`
+		Slug          string             `json:"slug"`
+		Address       types.Address      `json:"address"`
+		LogoUrl       string             `json:"logo_url"`
+		BannerUrl     string             `json:"banner_url"`
+		Settings      RestaurantSettings `json:"settings"`
+		CreatedAt     time.Time          `json:"created_at"`
+		UpdatedAt     time.Time          `json:"updated_at"`
+		Active        bool               `json:"active"`
 	}
 )
+
+func NewRestaurant(
+	tradeName,
+	legalName,
+	cnpj,
+	contactPhone,
+	whatsappPhone,
+	email,
+	slug string,
+	address types.Address,
+	settings RestaurantSettings,
+) *Restaurant {
+	return &Restaurant{
+		AggregateRoot: abstractions.NewAggregateRoot(),
+		TradeName:     tradeName,
+		LegalName:     legalName,
+		CNPJ:          cnpj,
+		ContactPhone:  contactPhone,
+		WhatsAppPhone: whatsappPhone,
+		Email:         email,
+		Slug:          slug,
+		Address:       address,
+		Settings:      settings,
+		CreatedAt:     time.Now(),
+		UpdatedAt:     time.Now(),
+		Active:        true,
+	}
+}

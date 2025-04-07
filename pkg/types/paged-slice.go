@@ -1,16 +1,18 @@
-package pagination
+package types
+
+type PagedSliceMeta struct {
+	TotalRecords  int `json:"total_records"`
+	RecordsLength int `json:"records_length"`
+	CurrentPage   int `json:"current_page"`
+	TotalPages    int `json:"total_pages"`
+}
 
 type PagedSlice[T any] struct {
-	Meta struct {
-		TotalRecords  int `json:"total_records"`
-		RecordsLength int `json:"records_length"`
-		CurrentPage   int `json:"current_page"`
-		TotalPages    int `json:"total_pages"`
-	} `json:"meta"`
+	Meta PagedSliceMeta `json:"meta"`
 	Records []T `json:"records"`
 }
 
-func New[T any](
+func NewPagedSlice[T any](
 	limit int,
 	offset int,
 	totalRecords int,
@@ -35,7 +37,7 @@ func New[T any](
 
 type Selector[T, K any] func(T) K
 
-func Map[T, K any](source PagedSlice[T], selector Selector[T, K]) PagedSlice[K] {
+func MapPagedSlice[T, K any](source PagedSlice[T], selector Selector[T, K]) PagedSlice[K] {
 	destinyRecords := make([]K, source.Meta.RecordsLength)
 	for index, record := range source.Records {
 		destinyRecords[index] = selector(record)

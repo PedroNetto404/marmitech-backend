@@ -1,12 +1,11 @@
-package pagination_test
+package types_test
 
 import (
 	"strconv"
 	"testing"
 
+	"github.com/PedroNetto404/marmitech-backend/pkg/types"
 	"github.com/stretchr/testify/assert"
-
-	"github.com/PedroNetto404/marmitech-backend/pkg/pagination"
 )
 
 func TestPagedSliceMap(t *testing.T) {
@@ -16,11 +15,11 @@ func TestPagedSliceMap(t *testing.T) {
 	offset := 0
 	totalRecords := 23
 
-	pagedSlice := pagination.New(limit, offset, totalRecords, records)
+	pagedSlice := types.NewPagedSlice(limit, offset, totalRecords, records)
 
 	// act
-	result := pagination.Map(pagedSlice, func(num int) string {
-		return strconv.Itoa(num)
+	result := types.MapPagedSlice(pagedSlice, func(record int) string {
+		return strconv.Itoa(record)
 	})
 
 	//assert
