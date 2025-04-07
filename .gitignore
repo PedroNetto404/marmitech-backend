@@ -1,0 +1,52 @@
+# Go build artifacts
+/bin/
+/build/
+/dist/
+*.exe
+*.test
+*.out
+
+# Go modules
+/go.sum
+/vendor/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# IDEs
+.vscode/
+.idea/
+*.swp
+
+# Logs
+*.log
+
+# Dependency directories
+node_modules/
+
+# Environment
+.env
+.env.*
+
+# Test coverage reports
+coverage.*
+*.coverprofile
+*.cov
+
+# Docker
+*.tar
+docker-compose.override.yml
+
+# Generated code
+*.pb.go
+*.pb.validate.go
+*.gen.go
+
+# Task/Build tools (e.g. Taskfile, Makefile)
+.task/
+.task-cache/
+
+# Local configs
+*.local.*
+*.bak
