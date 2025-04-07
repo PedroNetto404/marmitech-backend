@@ -21,14 +21,45 @@ func NewRestaurantRepository(db *database.Database) *restaurantRepository {
 func (r *restaurantRepository) Find(args types.FindArgs) (*types.PagedSlice[aggregates.Restaurant], error) {
 	baseQuery := `
 		SELECT 
-			id, trade_name, legal_name, cnpj, contact_phone, whatsapp_phone, email, slug,
-			address, logo_url, banner_url, settings,
-			created_at, updated_at
+			id,
+			trade_name,
+			legal_name,
+			cnpj,
+			contact_phone,
+			whatsapp_phone,
+			email,
+			slug,
+			address_street,
+			address_number,
+			address_complement,
+			address_neighborhood,
+			address_city,
+			address_state,
+			address_zip_code,
+			address_country,
+			address_lat,
+			address_lng,
+			logo_url,
+			banner_url,
+			show_cnpj_in_receipt,
+			delivery_enabled,
+			delivery_fee_per_km,
+			delivery_minimum_order_value,
+			delivery_max_radius_delivery,
+			delivery_average_time_minutes,
+			ecommerce_minimum_order_value,
+			ecommerce_acquired,
+			ecommerce_acquired_at,
+			ecommerce_online,
+			post_paid_acquired,
+			post_paid_acquired_at,
+			post_paid_enabled,
+			created_at,
+			updated_at
 		FROM restaurants
 		WHERE deleted_at IS NULL AND active = 1`
 
 	countQuery := `SELECT COUNT(*) FROM restaurants WHERE deleted_at IS NULL AND active = 1`
-
 	query, count, params := r.db.BuildFindQuery(baseQuery, countQuery, args)
 
 	rows, err := r.db.Instance.Query(query, params...)
@@ -37,9 +68,10 @@ func (r *restaurantRepository) Find(args types.FindArgs) (*types.PagedSlice[aggr
 	}
 	defer rows.Close()
 
-	restaurants := make([]aggregates.Restaurant, 0)
+	restaurants := make([]aggregates.Restaurant, 0, 10)
 	for rows.Next() {
 		var restaurant aggregates.Restaurant
+		var addressComplement sql.NullString
 		err := rows.Scan(
 			&restaurant.Id,
 			&restaurant.TradeName,
@@ -49,17 +81,47 @@ func (r *restaurantRepository) Find(args types.FindArgs) (*types.PagedSlice[aggr
 			&restaurant.WhatsAppPhone,
 			&restaurant.Email,
 			&restaurant.Slug,
-			&restaurant.Address,
+			&restaurant.Address.Street,
+			&restaurant.Address.Number,
+			&addressComplement,
+			&restaurant.Address.Neighborhood,
+			&restaurant.Address.City,
+			&restaurant.Address.State,
+			&restaurant.Address.ZipCode,
+			&restaurant.Address.Country,
+			&restaurant.Address.Lat,
+			&restaurant.Address.Lng,
 			&restaurant.LogoUrl,
 			&restaurant.BannerUrl,
-			&restaurant.Settings,
+			&restaurant.Settings.ShowCnpjInReceipt,
+			&restaurant.Settings.Delivery.Enabled,
+			&restaurant.Settings.Delivery.FeePerKm,
+			&restaurant.Settings.Delivery.MinimumOrderValue,
+			&restaurant.Settings.Delivery.MaxRadiusDelivery,
+			&restaurant.Settings.Delivery.AverageTimeMinutes,
+			&restaurant.Settings.Ecommerce.MinimumOrderValue,
+			&restaurant.Settings.Ecommerce.Acquired,
+			&restaurant.Settings.Ecommerce.AcquiredAt,
+			&restaurant.Settings.Ecommerce.Online,
+			&restaurant.Settings.PostPaid.Acquired,
+			&restaurant.Settings.PostPaid.AcquiredAt,
+			&restaurant.Settings.PostPaid.Enabled,
 			&restaurant.CreatedAt,
 			&restaurant.UpdatedAt,
 		)
 		if err != nil {
 			return nil, err
 		}
+		if addressComplement.Valid {
+			restaurant.Address.Complement = addressComplement.String
+		} else {
+			restaurant.Address.Complement = ""
+		}
 		restaurants = append(restaurants, restaurant)
+	}
+
+	if err = rows.Err(); err != nil {
+		return nil, err
 	}
 
 	pagedSlice := types.NewPagedSlice(args.Limit, args.Offset, count, restaurants)
@@ -67,25 +129,68 @@ func (r *restaurantRepository) Find(args types.FindArgs) (*types.PagedSlice[aggr
 }
 
 func (repo *restaurantRepository) FindById(id string) (*aggregates.Restaurant, error) {
-	query := `SELECT 
-		id, trade_name, legal_name, cnpj, contact_phone, whatsapp_phone, email, slug,
-		address_street, address_number, address_complement, address_neighborhood,
-		address_city, address_state, address_zip_code, address_country, address_lat, address_lng,
-		show_cnpj_in_receipt,
-		delivery_enabled, delivery_fee_per_km, delivery_minimum_order_value, delivery_max_radius_delivery, delivery_average_time_minutes,
-		ecommerce_minimum_order_value, ecommerce_acquired, ecommerce_acquired_at, ecommerce_online,
-		post_paid_acquired, post_paid_acquired_at, post_paid_enabled,
-		logo_url, banner_url,
-		created_at, updated_at, active
-		FROM restaurants WHERE deleted_at IS NULL AND id = ?`
+	query := `
+		SELECT 
+			id,
+			trade_name,
+			legal_name,
+			cnpj,
+			contact_phone,
+			whatsapp_phone,
+			email,
+			slug,
+			address_street,
+			address_number,
+			address_complement,
+			address_neighborhood,
+			address_city,
+			address_state,
+			address_zip_code,
+			address_country,
+			address_lat,
+			address_lng,
+			show_cnpj_in_receipt,
+			delivery_enabled,
+			delivery_fee_per_km,
+			delivery_minimum_order_value,
+			delivery_max_radius_delivery,
+			delivery_average_time_minutes,
+			ecommerce_minimum_order_value,
+			ecommerce_acquired,
+			ecommerce_acquired_at,
+			ecommerce_online,
+			post_paid_acquired,
+			post_paid_acquired_at,
+			post_paid_enabled,
+			logo_url,
+			banner_url,
+			created_at,
+			updated_at,
+			active
+		FROM restaurants
+		WHERE deleted_at IS NULL AND id = ?`
 
 	var r aggregates.Restaurant
+	var addressComplement sql.NullString
 	err := repo.db.Instance.QueryRow(query, id).Scan(
-		&r.Id, &r.TradeName, &r.LegalName, &r.CNPJ,
-		&r.ContactPhone, &r.WhatsAppPhone, &r.Email, &r.Slug,
-		&r.Address.Street, &r.Address.Number, &r.Address.Complement, &r.Address.Neighborhood,
-		&r.Address.City, &r.Address.State, &r.Address.ZipCode, &r.Address.Country,
-		&r.Address.Lat, &r.Address.Lng,
+		&r.Id,
+		&r.TradeName,
+		&r.LegalName,
+		&r.CNPJ,
+		&r.ContactPhone,
+		&r.WhatsAppPhone,
+		&r.Email,
+		&r.Slug,
+		&r.Address.Street,
+		&r.Address.Number,
+		&addressComplement,
+		&r.Address.Neighborhood,
+		&r.Address.City,
+		&r.Address.State,
+		&r.Address.ZipCode,
+		&r.Address.Country,
+		&r.Address.Lat,
+		&r.Address.Lng,
 		&r.Settings.ShowCnpjInReceipt,
 		&r.Settings.Delivery.Enabled,
 		&r.Settings.Delivery.FeePerKm,
@@ -99,8 +204,11 @@ func (repo *restaurantRepository) FindById(id string) (*aggregates.Restaurant, e
 		&r.Settings.PostPaid.Acquired,
 		&r.Settings.PostPaid.AcquiredAt,
 		&r.Settings.PostPaid.Enabled,
-		&r.LogoUrl, &r.BannerUrl,
-		&r.CreatedAt, &r.UpdatedAt, &r.Active,
+		&r.LogoUrl,
+		&r.BannerUrl,
+		&r.CreatedAt,
+		&r.UpdatedAt,
+		&r.Active,
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -108,8 +216,16 @@ func (repo *restaurantRepository) FindById(id string) (*aggregates.Restaurant, e
 		}
 		return nil, err
 	}
+
+	if addressComplement.Valid {
+		r.Address.Complement = addressComplement.String
+	} else {
+		r.Address.Complement = ""
+	}
+
 	return &r, nil
 }
+
 func (r *restaurantRepository) Create(record *aggregates.Restaurant) error {
 	query := `
 		INSERT INTO restaurants (
@@ -161,12 +277,25 @@ func (r *restaurantRepository) Update(record *aggregates.Restaurant) error {
 			logo_url = ?, banner_url = ?, updated_at = ?, active = ?
 		WHERE id = ? AND deleted_at IS NULL`
 
-	_, err := r.db.Instance.Exec(query,
-		record.TradeName, record.LegalName, record.CNPJ,
-		record.ContactPhone, record.WhatsAppPhone, record.Email, record.Slug,
-		record.Address.Street, record.Address.Number, record.Address.Complement, record.Address.Neighborhood,
-		record.Address.City, record.Address.State, record.Address.ZipCode, record.Address.Country,
-		record.Address.Lat, record.Address.Lng,
+	_, err := r.db.Instance.Exec(
+		query,
+		record.TradeName, 
+		record.LegalName, 
+		record.CNPJ,
+		record.ContactPhone, 
+		record.WhatsAppPhone, 
+		record.Email, 
+		record.Slug,
+		record.Address.Street, 
+		record.Address.Number, 
+		record.Address.Complement, 
+		record.Address.Neighborhood,
+		record.Address.City, 
+		record.Address.State, 
+		record.Address.ZipCode, 
+		record.Address.Country,
+		record.Address.Lat, 
+		record.Address.Lng,
 		record.Settings.ShowCnpjInReceipt,
 		record.Settings.Delivery.Enabled,
 		record.Settings.Delivery.FeePerKm,
@@ -180,39 +309,86 @@ func (r *restaurantRepository) Update(record *aggregates.Restaurant) error {
 		record.Settings.PostPaid.Acquired,
 		record.Settings.PostPaid.AcquiredAt,
 		record.Settings.PostPaid.Enabled,
-		record.LogoUrl, record.BannerUrl,
-		record.UpdatedAt, record.Active,
+		record.LogoUrl, 
+		record.BannerUrl,
+		record.UpdatedAt, 
+		record.Active,
 		record.Id,
 	)
 	return err
 }
 
 func (r *restaurantRepository) Delete(id string) error {
-	query := `UPDATE restaurants SET deleted_at = NOW() WHERE id = ? AND deleted_at IS NULL`
+	query := `
+	UPDATE restaurants 
+	SET deleted_at = NOW() 
+	WHERE id = ? AND deleted_at IS NULL`
 	_, err := r.db.Instance.Exec(query, id)
 	return err
 }
 
 func (repo *restaurantRepository) FindByDocument(cnpj string) (*aggregates.Restaurant, error) {
-	query := `SELECT 
-		id, trade_name, legal_name, cnpj, contact_phone, whatsapp_phone, email, slug,
-		address_street, address_number, address_complement, address_neighborhood,
-		address_city, address_state, address_zip_code, address_country, address_lat, address_lng,
+	query := `
+	SELECT 
+		id, 
+		trade_name, 
+		legal_name, 
+		cnpj, 
+		contact_phone, 
+		whatsapp_phone, 
+		email, 
+		slug,
+		address_street, 
+		address_number, 
+		address_complement, 
+		address_neighborhood,
+		address_city, 
+		address_state, 
+		address_zip_code, 
+		address_country, 
+		address_lat, 
+		address_lng,
 		show_cnpj_in_receipt,
-		delivery_enabled, delivery_fee_per_km, delivery_minimum_order_value, delivery_max_radius_delivery, delivery_average_time_minutes,
-		ecommerce_minimum_order_value, ecommerce_acquired, ecommerce_acquired_at, ecommerce_online,
-		post_paid_acquired, post_paid_acquired_at, post_paid_enabled,
-		logo_url, banner_url,
-		created_at, updated_at, active
-		FROM restaurants WHERE deleted_at IS NULL AND cnpj = ?`
+		delivery_enabled, 
+		delivery_fee_per_km, 
+		delivery_minimum_order_value, 
+		delivery_max_radius_delivery, 
+		delivery_average_time_minutes,
+		ecommerce_minimum_order_value, 
+		ecommerce_acquired, 
+		ecommerce_acquired_at, 
+		ecommerce_online,
+		post_paid_acquired, 
+		post_paid_acquired_at, 
+		post_paid_enabled,
+		logo_url, 
+		banner_url,
+		created_at, 
+		updated_at, 
+		active
+	FROM restaurants 
+	WHERE deleted_at IS NULL AND cnpj = ?`
 
 	var r aggregates.Restaurant
 	err := repo.db.Instance.QueryRow(query, cnpj).Scan(
-		&r.Id, &r.TradeName, &r.LegalName, &r.CNPJ,
-		&r.ContactPhone, &r.WhatsAppPhone, &r.Email, &r.Slug,
-		&r.Address.Street, &r.Address.Number, &r.Address.Complement, &r.Address.Neighborhood,
-		&r.Address.City, &r.Address.State, &r.Address.ZipCode, &r.Address.Country,
-		&r.Address.Lat, &r.Address.Lng,
+		&r.Id, 
+		&r.TradeName, 
+		&r.LegalName, 
+		&r.CNPJ,
+		&r.ContactPhone, 
+		&r.WhatsAppPhone, 
+		&r.Email, 
+		&r.Slug,
+		&r.Address.Street, 
+		&r.Address.Number, 
+		&r.Address.Complement, 
+		&r.Address.Neighborhood,
+		&r.Address.City, 
+		&r.Address.State, 
+		&r.Address.ZipCode, 
+		&r.Address.Country,
+		&r.Address.Lat, 
+		&r.Address.Lng,
 		&r.Settings.ShowCnpjInReceipt,
 		&r.Settings.Delivery.Enabled,
 		&r.Settings.Delivery.FeePerKm,
@@ -226,8 +402,11 @@ func (repo *restaurantRepository) FindByDocument(cnpj string) (*aggregates.Resta
 		&r.Settings.PostPaid.Acquired,
 		&r.Settings.PostPaid.AcquiredAt,
 		&r.Settings.PostPaid.Enabled,
-		&r.LogoUrl, &r.BannerUrl,
-		&r.CreatedAt, &r.UpdatedAt, &r.Active,
+		&r.LogoUrl, 
+		&r.BannerUrl,
+		&r.CreatedAt, 
+		&r.UpdatedAt, 
+		&r.Active,
 	)
 
 	if err != nil {

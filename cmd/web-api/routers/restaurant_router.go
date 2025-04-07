@@ -73,13 +73,13 @@ func getById(useCase usecase.IRestaurantUseCase) gin.HandlerFunc {
 
 func getAll(useCase usecase.IRestaurantUseCase) gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var request types.FindArgs
-		if err := c.ShouldBindQuery(&request); err != nil {
+		queryArgs := types.NewDefaultFindArgs()
+		if err := c.ShouldBindQuery(&queryArgs); err != nil {
 			c.JSON(http.StatusBadRequest, err)
 			return
 		}
 
-		restaurants, err := useCase.GetAll(request)
+		restaurants, err := useCase.GetAll(queryArgs)
 		if err != nil {
 			c.JSON(http.StatusInternalServerError, err)
 			return

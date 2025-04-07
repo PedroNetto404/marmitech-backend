@@ -62,7 +62,7 @@ func (d *Database) Migrate() error {
 
 func (d *Database) BuildFindQuery(baseQuery, countQuery string, args types.FindArgs) (finalQuery string, totalCount int, params []any) {
 	filterClauses := make([]string, 0)
-	params = make([]any, 0)
+	filterParams := make([]any, 0)
 
 	filterKeys := make([]string, 0, len(args.Filter))
 	for k := range args.Filter {
@@ -72,7 +72,7 @@ func (d *Database) BuildFindQuery(baseQuery, countQuery string, args types.FindA
 
 	for _, key := range filterKeys {
 		filterClauses = append(filterClauses, fmt.Sprintf("%s = ?", key))
-		params = append(params, args.Filter[key])
+		filterParams = append(filterParams, args.Filter[key])
 	}
 
 	if len(filterClauses) > 0 {
@@ -92,17 +92,28 @@ func (d *Database) BuildFindQuery(baseQuery, countQuery string, args types.FindA
 
 	if args.Limit > 0 {
 		baseQuery += " LIMIT ?"
-		params = append(params, args.Limit)
+		filterParams = append(filterParams, args.Limit)
 	}
 	if args.Offset > 0 {
 		baseQuery += " OFFSET ?"
-		params = append(params, args.Offset)
+		filterParams = append(filterParams, args.Offset)
 	}
 
-	row := d.Instance.QueryRow(countQuery, params[:len(params)-2]...) 
+	row := d.Instance.QueryRow(countQuery, filterParams[:len(filterParams)-countPaginationOffset(args)]...)
 	if err := row.Scan(&totalCount); err != nil {
-		totalCount = 0 
+		totalCount = 0
 	}
 
-	return baseQuery, totalCount, params
+	return baseQuery, totalCount, filterParams
+}
+
+func countPaginationOffset(args types.FindArgs) int {
+	count := 0
+	if args.Limit > 0 {
+		count++
+	}
+	if args.Offset > 0 {
+		count++
+	}
+	return count
 }
