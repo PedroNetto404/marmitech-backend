@@ -22,6 +22,7 @@ type environtment struct {
 	MySqlDatabase     string `env:"MYSQL_DATABASE"`
 	MySqlUser         string `env:"MYSQL_USER"`
 	MySqlPass         string `env:"MYSQL_PASS"`
+	DiskStoragePath string `env:"DISK_STORAGE_PATH"`
 }
 
 var Env environtment

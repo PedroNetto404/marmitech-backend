@@ -117,7 +117,7 @@ func (r *restaurantUseCase) SetImages(id string, payload *dtos.SetRestaurantImag
 	if payload.Logo != nil {
 		key := fmt.Sprintf("restaurants_%s_logo", restaurant.Id)
 
-		url, err := r.fileStorage.Save(key, bucket, payload.Logo.Content)
+		url, err := r.fileStorage.Save(key, dishBucket, payload.Logo.Content)
 		if err != nil {
 			return nil, err
 		}
@@ -127,7 +127,7 @@ func (r *restaurantUseCase) SetImages(id string, payload *dtos.SetRestaurantImag
 	if payload.Banner != nil {
 		key := fmt.Sprintf("restaurants_%s_banner", restaurant.Id)
 
-		url, err := r.fileStorage.Save(key, bucket, payload.Banner.Content)
+		url, err := r.fileStorage.Save(key, dishBucket, payload.Banner.Content)
 		if err != nil {
 			return nil, err
 		}

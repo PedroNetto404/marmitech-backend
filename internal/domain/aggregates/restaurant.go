@@ -14,6 +14,11 @@ const (
 )
 
 type (
+	PartialRestaurant struct {
+		Id        string `json:"id"`
+		TradeName string `json:"trade_name,omitempty"`
+	}
+
 	DeliveryConfig struct {
 		Enabled            bool `json:"enabled"`
 		FeePerKm           int  `json:"fee_per_km"`

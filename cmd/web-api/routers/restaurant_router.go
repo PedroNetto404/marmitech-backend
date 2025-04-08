@@ -12,15 +12,15 @@ import (
 func RegisterRestaurantRoutes(r *gin.RouterGroup, useCase usecase.IRestaurantUseCase) {
 	group := r.Group("/restaurants")
 
-	group.POST("/", create(useCase))
-	group.PUT("/:id", update(useCase))
-	group.GET("/:id", getById(useCase))
-	group.GET("/", getAll(useCase))
-	group.DELETE("/:id", delete(useCase))
-	group.POST("/:id/images", setImages(useCase))
+	group.POST("/", createRestaurant(useCase))
+	group.PUT("/:id", updateRestaurant(useCase))
+	group.GET("/:id", getRestaurantById(useCase))
+	group.GET("/", getAllRestaurants(useCase))
+	group.DELETE("/:id", deleteRestaurant(useCase))
+	group.POST("/:id/images", setRestaurantImages(useCase))
 }
 
-func create(useCase usecase.IRestaurantUseCase) gin.HandlerFunc {
+func createRestaurant(useCase usecase.IRestaurantUseCase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var payload dtos.RestaurantPayload
 		if err := c.ShouldBindJSON(&payload); err != nil {
@@ -38,7 +38,7 @@ func create(useCase usecase.IRestaurantUseCase) gin.HandlerFunc {
 	}
 }
 
-func update(useCase usecase.IRestaurantUseCase) gin.HandlerFunc {
+func updateRestaurant(useCase usecase.IRestaurantUseCase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("id")
 		var payload dtos.RestaurantPayload
@@ -57,7 +57,7 @@ func update(useCase usecase.IRestaurantUseCase) gin.HandlerFunc {
 	}
 }
 
-func getById(useCase usecase.IRestaurantUseCase) gin.HandlerFunc {
+func getRestaurantById(useCase usecase.IRestaurantUseCase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("id")
 
@@ -71,7 +71,7 @@ func getById(useCase usecase.IRestaurantUseCase) gin.HandlerFunc {
 	}
 }
 
-func getAll(useCase usecase.IRestaurantUseCase) gin.HandlerFunc {
+func getAllRestaurants(useCase usecase.IRestaurantUseCase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		queryArgs := types.NewDefaultFindArgs()
 		if err := c.ShouldBindQuery(&queryArgs); err != nil {
@@ -89,7 +89,7 @@ func getAll(useCase usecase.IRestaurantUseCase) gin.HandlerFunc {
 	}
 }
 
-func delete(useCase usecase.IRestaurantUseCase) gin.HandlerFunc {
+func deleteRestaurant(useCase usecase.IRestaurantUseCase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("id")
 
@@ -102,7 +102,7 @@ func delete(useCase usecase.IRestaurantUseCase) gin.HandlerFunc {
 	}
 }
 
-func setImages(useCase usecase.IRestaurantUseCase) gin.HandlerFunc {
+func setRestaurantImages(useCase usecase.IRestaurantUseCase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("id")
 		var payload dtos.SetRestaurantImagesPayload
@@ -120,4 +120,3 @@ func setImages(useCase usecase.IRestaurantUseCase) gin.HandlerFunc {
 		c.JSON(http.StatusOK, restaurant)
 	}
 }
-
