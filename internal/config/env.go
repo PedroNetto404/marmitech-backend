@@ -23,6 +23,10 @@ type environtment struct {
 	MySqlUser         string `env:"MYSQL_USER"`
 	MySqlPass         string `env:"MYSQL_PASS"`
 	DiskStoragePath string `env:"DISK_STORAGE_PATH"`
+	JwtSecretKey string `env:"JWT_SECRET_KEY"`
+	JwtIssuer string `env:"JWT_ISSUER"`
+	JwtAudience string `env:"JWT_AUDIENCE"`
+	JwtExpirationMinutes int `env:"JWT_EXPIRATION_MINUTES"`
 }
 
 var Env environtment

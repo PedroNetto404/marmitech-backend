@@ -6,39 +6,43 @@ CREATE TABLE restaurants (
     contact_phone VARCHAR(20),
     whatsapp_phone VARCHAR(20),
     email VARCHAR(255),
+    accepted_payment_methods JSON NOT NULL,
     slug VARCHAR(255) UNIQUE,
-    address_street VARCHAR(255),
-    address_number VARCHAR(20),
-    address_complement VARCHAR(255),
-    address_neighborhood VARCHAR(255),
-    address_city VARCHAR(100),
-    address_state VARCHAR(100),
-    address_zip_code VARCHAR(20),
-    address_country VARCHAR(100),
-    address_lat DOUBLE,
-    address_lng DOUBLE,
+    address_id CHAR(36) NOT NULL,
     show_cnpj_in_receipt BOOLEAN,
     delivery_enabled BOOLEAN,
     delivery_fee_per_km INT,
     delivery_minimum_order_value INT,
-    delivery_max_radius_delivery INT,
+    delivery_max_radius_km INT,
     delivery_average_time_minutes INT,
+    ecommerce_enabled BOOLEAN,
     ecommerce_minimum_order_value INT,
-    ecommerce_acquired BOOLEAN,
-    ecommerce_acquired_at TIMESTAMP NULL,
-    ecommerce_online BOOLEAN,
-    customer_post_paid_orders_acquired BOOLEAN,
-    customer_post_paid_orders_acquired_at TIMESTAMP NULL,
+    ecommerce_delivery_fee_per_km INT,
+    ecommerce_delivery_max_radius_km INT,
+    ecommerce_delivery_average_time_minutes INT,
     customer_post_paid_orders_enabled BOOLEAN,
-    logo_url TEXT,
-    banner_url TEXT,
-    created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-    deleted_at TIMESTAMP NULL DEFAULT NULL,
-    active BOOLEAN NOT NULL DEFAULT TRUE
+    customer_post_paid_orders_minimum_order_value INT,
+    customer_post_paid_orders_average_time_minutes INT,
+    customer_post_paid_orders_delivery_fee_per_km INT,
+    customer_post_paid_orders_delivery_max_radius_km INT,
+    customer_post_paid_orders_delivery_average_time_minutes INT,
+    logo_url VARCHAR(255),
+    banner_url VARCHAR(255),
+    created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    active BOOLEAN NOT NULL DEFAULT TRUE,
+    deleted_at DATETIME NULL,
+    FOREIGN KEY (address_id) REFERENCES addresses(id) ON DELETE CASCADE ON UPDATE CASCADE
 );
 
-
-CREATE INDEX idx_restaurants_slug ON restaurants(slug);
+CREATE INDEX idx_restaurants_slug ON restaurants(slug); 
 CREATE INDEX idx_restaurants_active ON restaurants(active);
 CREATE INDEX idx_restaurants_created_at ON restaurants(created_at);
+
+CREATE TABLE restaurant_pix_keys(
+    id CHAR(36) PRIMARY KEY,
+    restaurant_id CHAR(36) NOT NULL,
+    pix_key VARCHAR(255) NOT NULL,
+    name VARCHAR(255) NOT NULL,
+    FOREIGN KEY (restaurant_id) REFERENCES restaurants(id) ON DELETE CASCADE ON UPDATE CASCADE
+);

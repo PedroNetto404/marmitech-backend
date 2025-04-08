@@ -12,14 +12,13 @@ import (
 	"github.com/golang-migrate/migrate"
 )
 
-type Database struct {
+type Db struct {
 	Instance *sql.DB
+	dns      string
 }
 
-var dns string
-
-func New() (*Database, error) {
-	dns = fmt.Sprintf(
+func NewMySQLDatabase() (*Db, error) {
+	dns := fmt.Sprintf(
 		"%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		config.Env.MySqlUser,
 		config.Env.MySqlPass,
@@ -37,17 +36,17 @@ func New() (*Database, error) {
 		return nil, err
 	}
 
-	return &Database{Instance: db}, nil
+	return &Db{Instance: db, dns: dns}, nil
 }
 
-func (d *Database) Close() error {
+func (d *Db) Close() error {
 	return d.Instance.Close()
 }
 
 const migrationsPath = "file://migrations"
 
-func (d *Database) Migrate() error {
-	m, err := migrate.New(migrationsPath, dns)
+func (d *Db) Migrate() error {
+	m, err := migrate.New(migrationsPath, d.dns)
 	if err != nil {
 		return fmt.Errorf("failed to initialize migrations: %w", err)
 	}
@@ -60,7 +59,7 @@ func (d *Database) Migrate() error {
 	return nil
 }
 
-func (d *Database) BuildFindQuery(baseQuery, countQuery string, args types.FindArgs) (finalQuery string, totalCount int, params []any) {
+func (d *Db) ConstructFindQuery(baseQuery, countQuery string, args types.FindArgs) (finalQuery string, totalCount int, params []any) {
 	filterClauses := make([]string, 0)
 	filterParams := make([]any, 0)
 
@@ -76,7 +75,7 @@ func (d *Database) BuildFindQuery(baseQuery, countQuery string, args types.FindA
 	}
 
 	if len(filterClauses) > 0 {
-		filterSQL := " AND " + strings.Join(filterClauses, " AND ")
+		filterSQL := " WHERE " + strings.Join(filterClauses, " AND ")
 		baseQuery += filterSQL
 		countQuery += filterSQL
 	}
@@ -99,21 +98,10 @@ func (d *Database) BuildFindQuery(baseQuery, countQuery string, args types.FindA
 		filterParams = append(filterParams, args.Offset)
 	}
 
-	row := d.Instance.QueryRow(countQuery, filterParams[:len(filterParams)-countPaginationOffset(args)]...)
+	row := d.Instance.QueryRow(countQuery, filterParams...)
 	if err := row.Scan(&totalCount); err != nil {
 		totalCount = 0
 	}
 
 	return baseQuery, totalCount, filterParams
-}
-
-func countPaginationOffset(args types.FindArgs) int {
-	count := 0
-	if args.Limit > 0 {
-		count++
-	}
-	if args.Offset > 0 {
-		count++
-	}
-	return count
 }

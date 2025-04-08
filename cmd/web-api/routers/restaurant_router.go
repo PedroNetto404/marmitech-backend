@@ -9,9 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func RegisterRestaurantRoutes(r *gin.RouterGroup, useCase usecase.IRestaurantUseCase) {
-	group := r.Group("/restaurants")
-
+func RegisterRestaurantRoutes(group *gin.RouterGroup, useCase usecase.IRestaurantUseCase) {
 	group.POST("/", createRestaurant(useCase))
 	group.PUT("/:id", updateRestaurant(useCase))
 	group.GET("/:id", getRestaurantById(useCase))

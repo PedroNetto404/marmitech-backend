@@ -7,10 +7,10 @@ import (
 )
 
 type categoryRepository struct {
-	db *database.Database
+	db *database.Db
 }
 
-func NewCategoryRepository(db *database.Database) *categoryRepository {
+func NewCategoryRepository(db *database.Db) *categoryRepository {
 	return &categoryRepository{
 		db: db,
 	}

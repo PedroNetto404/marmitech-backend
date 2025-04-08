@@ -91,13 +91,12 @@ func (d *dishUseCase) Create(dishPayload *DishPayload) (*aggregates.Dish, error)
 		dishPayload.Restaurant.Id,
 		dishPayload.Name,
 		dishPayload.Type,
-		dishPayload.PriceWhenUsedAsAddOn,
 	)
 
 	err = d.dishRepository.Create(dish)
 	if err != nil {
 		return nil, err
-	}
+		}
 
 	return dish, nil
 }
@@ -123,7 +122,6 @@ func (d *dishUseCase) Update(id string, dishPayload *DishPayload) (*aggregates.D
 
 	dish.Name = dishPayload.Name
 	dish.Type = dishPayload.Type
-	dish.PriceWhenUsedAsAddOn = dishPayload.PriceWhenUsedAsAddOn
 	dish.Restaurant.Id = dishPayload.Restaurant.Id
 
 	err = d.dishRepository.Update(dish)

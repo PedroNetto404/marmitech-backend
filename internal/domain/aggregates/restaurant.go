@@ -23,31 +23,43 @@ type (
 		Enabled            bool `json:"enabled"`
 		FeePerKm           int  `json:"fee_per_km"`
 		MinimumOrderValue  int  `json:"minimum_order_value"`
-		MaxRadiusDelivery  int  `json:"max_radius_delivery"`
+		MaxRadiusKm        int  `json:"max_radius_km"`
 		AverageTimeMinutes int  `json:"average_time_minutes"`
 	}
 
 	EcommerceFeatures struct {
-		MinimumOrderValue int        `json:"minimum_order_value"`
-		Acquired          bool       `json:"acquired"`
+		MinimumOrderValue int  `json:"minimum_order_value"`
+		Enabled           bool `json:"enabled"`
+		Acquired          bool `json:"acquired"`
 		AcquiredAt        *time.Time `json:"acquired_at,omitempty"`
-		Online            bool       `json:"online"`
 	}
 
 	PostPaidFeatures struct {
-		Acquired   bool       `json:"acquired"`
-		AcquiredAt *time.Time `json:"acquired_at,omitempty"`
-		Enabled    bool       `json:"enabled"`
+		Enabled                  bool `json:"enabled"`
+		MinimumOrderValue        int  `json:"minimum_order_value"`
+		AverageTimeMinutes       int  `json:"average_time_minutes"`
+		DeliveryFeePerKm         int  `json:"delivery_fee_per_km"`
+		DeliveryMaxRadiusKm      int  `json:"delivery_max_radius_km"`
+		DeliveryAverageTimeMinutes int `json:"delivery_average_time_minutes"`
 	}
 
 	RestaurantSettings struct {
-		ShowCnpjInReceipt      bool                 `json:"show_cnpj_in_receipt"`
-		WeeklySchedule         types.WeeklySchedule `json:"weekly_schedule"`
-		Delivery               DeliveryConfig       `json:"delivery"`
-		Ecommerce              EcommerceFeatures    `json:"ecommerce"`
-		CustomerPostPaidOrders PostPaidFeatures     `json:"customer_post_paid_orders"`
+		ShowCnpjInReceipt      bool              `json:"show_cnpj_in_receipt"`
+		Delivery               DeliveryConfig    `json:"delivery"`
+		Ecommerce              EcommerceFeatures `json:"ecommerce"`
+		CustomerPostPaidOrders PostPaidFeatures  `json:"customer_post_paid_orders"`
 	}
 
+	PixKey struct {
+		Key string `json:"key"`
+		Alias string `json:"alias"`
+	}
+
+	Payments struct {
+		AcceptedPaymentMethods []string `json:"accepted_payment_methods"`
+		PixKeys                []PixKey `json:"pix_keys"`
+	} 
+	
 	Restaurant struct {
 		abstractions.AggregateRoot
 
@@ -65,6 +77,7 @@ type (
 		CreatedAt     time.Time          `json:"created_at"`
 		UpdatedAt     time.Time          `json:"updated_at"`
 		Active        bool               `json:"active"`
+		DeletedAt     *time.Time         `json:"deleted_at,omitempty"`
 	}
 )
 

@@ -15,6 +15,7 @@ import (
 	"github.com/PedroNetto404/marmitech-backend/internal/infra/respositories"
 	"github.com/PedroNetto404/marmitech-backend/pkg/database"
 	"github.com/PedroNetto404/marmitech-backend/pkg/middleware"
+	"github.com/PedroNetto404/marmitech-backend/internal/infra/auth"
 )
 
 var (
@@ -55,6 +56,7 @@ func main() {
 	} else {
 		blockStorage = files.NewDiskStorage(config.Env.DiskStoragePath)
 	}
+	authService := auth.NewJwtService(config.Env.JwtSecretKey, config.Env.JwtIssuer, config.Env.JwtAudience, config.Env.JwtExpirationMinutes)
 
 	// Repositories
 	db, err := database.New()
@@ -68,20 +70,25 @@ func main() {
 	}()
 	restaurantRepository := respositories.NewRestaurantRepository(db)
 	dishRepository := respositories.NewDishRepository(db)
-	categoryRepository := respositories.NewCategoryRepository(db)
+	categoryRepository := respositories.NewCategoryRepository(db)			
 	productRepository := respositories.NewProductRepository(db)
-	
+	userRepository := respositories.NewUserRepository(db)
 	// Use Cases
 	restaurantUseCase := usecase.NewRestaurantUseCase(restaurantRepository, blockStorage)
 	dishUseCase := usecase.NewDishUseCase(dishRepository, restaurantRepository, blockStorage)
 	categoryUseCase := usecase.NewCategoryUseCase(categoryRepository, restaurantRepository, blockStorage)
 	productUseCase := usecase.NewProductUseCase(productRepository, categoryRepository, restaurantRepository, blockStorage)
-	
+	userUseCase := usecase.NewUserUseCase(userRepository, authService)
+
 	// Routers
-	routers.RegisterRestaurantRoutes(baseGroup, restaurantUseCase)
-	routers.RegisterDishRoutes(baseGroup, dishUseCase)
-	routers.RegisterCategoryRoutes(baseGroup, categoryUseCase)
-	routers.RegisterProductRoutes(baseGroup, productUseCase)
+	routers.RegisterRoutes(
+		engine, 
+		categoryUseCase, 
+		productUseCase, 
+		dishUseCase, 
+		restaurantUseCase, 
+		userUseCase,
+	)
 
 	addr := fmt.Sprintf("%s:%s", config.Env.ApiHost, config.Env.ApiPort)
 

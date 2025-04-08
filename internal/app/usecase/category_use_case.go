@@ -25,7 +25,7 @@ type (
 		Priority   int                          `json:"priority"`
 	}
 
-	IcategoryUseCase interface {
+	ICategoryUseCase interface {
 		Find(args types.FindArgs) (*types.PagedSlice[aggregates.Category], error)
 		FindById(id string) (*aggregates.Category, error)
 		Create(category *CategoryPayload) (*aggregates.Category, error)
@@ -49,7 +49,7 @@ func NewCategoryUseCase(
 	categoryRepository ports.ICategoryRepository,
 	restaurantRepository ports.IRestaurantRepository,
 	blockStorage ports.IBlockStorage,
-) IcategoryUseCase {
+) ICategoryUseCase {
 	return &categoryUseCase{
 		categoryRepository:   categoryRepository,
 		restaurantRepository: restaurantRepository,

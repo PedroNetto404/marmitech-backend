@@ -3,9 +3,11 @@ package types
 import "fmt"
 
 type Address struct {
-	Street       string  `json:"street"`
-	Number       string  `json:"number"`
-	Complement   string  `json:"complement"`
+	Id         string  `json:"id"`
+	Alias      string  `json:"alias"`
+	Street     string  `json:"street"`
+	Number     string  `json:"number"`
+	Complement string  `json:"complement"`
 	Neighborhood string  `json:"neighborhood"`
 	City         string  `json:"city"`
 	State        string  `json:"state"`

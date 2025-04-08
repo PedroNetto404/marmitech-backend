@@ -13,7 +13,7 @@ import (
 
 func RegisterCategoryRoutes(
 	routerGroup *gin.RouterGroup,
-	categoryUseCase usecase.IcategoryUseCase,
+	categoryUseCase usecase.ICategoryUseCase,
 ) {
 	group := routerGroup.Group("/categories")
 	group.POST("/", createcategory(categoryUseCase))
@@ -29,7 +29,7 @@ func RegisterCategoryRoutes(
 	group.POST("/:id/reorder/swap/:swapId", reordercategory(categoryUseCase))
 }
 
-func createcategory(useCase usecase.IcategoryUseCase) gin.HandlerFunc {
+func createcategory(useCase usecase.ICategoryUseCase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		var payload usecase.CategoryPayload
 		if err := c.ShouldBindJSON(&payload); err != nil {
@@ -47,7 +47,7 @@ func createcategory(useCase usecase.IcategoryUseCase) gin.HandlerFunc {
 	}
 }
 
-func updatecategory(useCase usecase.IcategoryUseCase) gin.HandlerFunc {
+func updatecategory(useCase usecase.ICategoryUseCase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("id")
 		var payload usecase.CategoryPayload
@@ -66,7 +66,7 @@ func updatecategory(useCase usecase.IcategoryUseCase) gin.HandlerFunc {
 	}
 }
 
-func getcategoryById(useCase usecase.IcategoryUseCase) gin.HandlerFunc {
+func getcategoryById(useCase usecase.ICategoryUseCase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("id")
 
@@ -80,7 +80,7 @@ func getcategoryById(useCase usecase.IcategoryUseCase) gin.HandlerFunc {
 	}
 }
 
-func getProductCategories(useCase usecase.IcategoryUseCase) gin.HandlerFunc {
+func getProductCategories(useCase usecase.ICategoryUseCase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		findArgs := types.NewDefaultFindArgs()
 		if err := c.ShouldBindQuery(&findArgs); err != nil {
@@ -106,7 +106,7 @@ func getProductCategories(useCase usecase.IcategoryUseCase) gin.HandlerFunc {
 	}
 }
 
-func deletecategory(useCase usecase.IcategoryUseCase) gin.HandlerFunc {
+func deletecategory(useCase usecase.ICategoryUseCase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("id")
 
@@ -120,7 +120,7 @@ func deletecategory(useCase usecase.IcategoryUseCase) gin.HandlerFunc {
 	}
 }
 
-func setcategoryImage(useCase usecase.IcategoryUseCase) gin.HandlerFunc {
+func setcategoryImage(useCase usecase.ICategoryUseCase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("id")
 		fileHeader, err := c.FormFile("file")
@@ -156,7 +156,7 @@ func setcategoryImage(useCase usecase.IcategoryUseCase) gin.HandlerFunc {
 	}
 }
 
-func deletecategoryImage(useCase usecase.IcategoryUseCase) gin.HandlerFunc {
+func deletecategoryImage(useCase usecase.ICategoryUseCase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("id")
 
@@ -170,7 +170,7 @@ func deletecategoryImage(useCase usecase.IcategoryUseCase) gin.HandlerFunc {
 	}
 }
 
-func activatecategory(useCase usecase.IcategoryUseCase) gin.HandlerFunc {
+func activatecategory(useCase usecase.ICategoryUseCase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("id")
 
@@ -184,7 +184,7 @@ func activatecategory(useCase usecase.IcategoryUseCase) gin.HandlerFunc {
 	}
 }
 
-func deactivatecategory(useCase usecase.IcategoryUseCase) gin.HandlerFunc {
+func deactivatecategory(useCase usecase.ICategoryUseCase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("id")
 
@@ -198,7 +198,7 @@ func deactivatecategory(useCase usecase.IcategoryUseCase) gin.HandlerFunc {
 	}
 }
 
-func reordercategory(useCase usecase.IcategoryUseCase) gin.HandlerFunc {
+func reordercategory(useCase usecase.ICategoryUseCase) gin.HandlerFunc {
 	return func(c *gin.Context) {
 		id := c.Param("id")
 		if _, err := uuid.Parse(id); err != nil {

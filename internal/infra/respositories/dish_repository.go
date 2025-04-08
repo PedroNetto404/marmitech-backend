@@ -7,10 +7,10 @@ import (
 )
 
 type dishRepository struct {
-	db *database.Database
+	db *database.Db
 }
 
-func NewDishRepository(db *database.Database) *dishRepository {
+func NewDishRepository(db *database.Db) *dishRepository {
 	return &dishRepository{
 		db: db,
 	}

@@ -8,10 +8,10 @@ import (
 )
 
 type productRepository struct {
-	database *database.Database
+	database *database.Db
 }
 
-func NewProductRepository(db *database.Database) ports.IProductRepository {
+func NewProductRepository(db *database.Db) ports.IProductRepository {
 	return &productRepository{
 		database: db,
 	}
