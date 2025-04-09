@@ -19,7 +19,6 @@ type User struct {
 }
 
 var PermissionsByRole = map[string][]string{
-	// Dono do negócio
 	"admin": {
 		"create:user",
 		"read:user",
@@ -42,7 +41,6 @@ var PermissionsByRole = map[string][]string{
 		"update:product",
 		"delete:product",
 	},
-	// cliente do negócio, pode ser um cliente do restaurante, etc.
 	"customer": {
 		"read:restaurant",
 		"read:dish",

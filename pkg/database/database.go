@@ -1,23 +1,32 @@
 package database
 
 import (
+	"context"
 	"database/sql"
 	"fmt"
-	"sort"
-	"strings"
+	"time"
 
 	"github.com/PedroNetto404/marmitech-backend/internal/config"
-	"github.com/PedroNetto404/marmitech-backend/pkg/types"
 	_ "github.com/go-sql-driver/mysql"
-	"github.com/golang-migrate/migrate"
+	"github.com/golang-migrate/migrate/v4"
+	"github.com/golang-migrate/migrate/v4/database/mysql"
+	"github.com/golang-migrate/migrate/v4/source/file"
+	"github.com/Masterminds/squirrel"
 )
 
 type Db struct {
 	Instance *sql.DB
 	dns      string
+	queryTimeout int
+	retryAttempts int
+	retryDelay   int
 }
 
-func NewMySQLDatabase() (*Db, error) {
+func NewDb(
+	queryTimeout,
+	retryAttempts,
+	retryDelay int,
+) (*Db, error) {
 	dns := fmt.Sprintf(
 		"%s:%s@tcp(%s:%s)/%s?charset=utf8mb4&parseTime=True&loc=Local",
 		config.Env.MySqlUser,
@@ -28,15 +37,20 @@ func NewMySQLDatabase() (*Db, error) {
 	)
 
 	db, err := sql.Open("mysql", dns)
-	if err != nil {
+	if err != nil {	
 		return nil, err
-	}
+	}	
 
 	if err := db.Ping(); err != nil {
 		return nil, err
 	}
 
-	return &Db{Instance: db, dns: dns}, nil
+	return &Db{
+		dns: dns,
+		retryAttempts: retryAttempts,
+		retryDelay: retryDelay,
+		queryTimeout: queryTimeout,
+	}, nil
 }
 
 func (d *Db) Close() error {
@@ -46,7 +60,12 @@ func (d *Db) Close() error {
 const migrationsPath = "file://migrations"
 
 func (d *Db) Migrate() error {
-	m, err := migrate.New(migrationsPath, d.dns)
+	driver, err := mysql.WithInstance(d.Instance, &mysql.Config{})
+	if err != nil {
+		return fmt.Errorf("failed to create migration driver: %w", err)
+	}
+
+	m, err := migrate.NewWithDatabaseInstance(migrationsPath, "mysql", driver)
 	if err != nil {
 		return fmt.Errorf("failed to initialize migrations: %w", err)
 	}
@@ -59,49 +78,36 @@ func (d *Db) Migrate() error {
 	return nil
 }
 
-func (d *Db) ConstructFindQuery(baseQuery, countQuery string, args types.FindArgs) (finalQuery string, totalCount int, params []any) {
-	filterClauses := make([]string, 0)
-	filterParams := make([]any, 0)
+type Mapper func(rows *sql.Rows) (any, error)
 
-	filterKeys := make([]string, 0, len(args.Filter))
-	for k := range args.Filter {
-		filterKeys = append(filterKeys, k)
+// Query é um wrapper que possui timeout e retry
+func (d *Db) QueryPage(
+	builder sq.SelectBuilder,
+	mapper Mapper,
+	limit int,
+	offset int,
+) (any, error) {
+	builder = builder.Limit(uint64(limit)).Offset(uint64(offset))
+
+	query, args, err := builder.ToSql()
+	if err != nil {
+		return nil, err
 	}
-	sort.Strings(filterKeys)
-
-	for _, key := range filterKeys {
-		filterClauses = append(filterClauses, fmt.Sprintf("%s = ?", key))
-		filterParams = append(filterParams, args.Filter[key])
+	
+	rows, err := d.Instance.QueryContext(ctx, query, args...)
+	if err != nil {
+		return nil, err
 	}
+	defer rows.Close()
 
-	if len(filterClauses) > 0 {
-		filterSQL := " WHERE " + strings.Join(filterClauses, " AND ")
-		baseQuery += filterSQL
-		countQuery += filterSQL
-	}
-
-	if args.SortBy != "" {
-		baseQuery += fmt.Sprintf(" ORDER BY %s", args.SortBy)
-		if args.SortAsc {
-			baseQuery += " ASC"
-		} else {
-			baseQuery += " DESC"
+	items := make([]any, 0)
+	for rows.Next() {
+		item, err := mapper(rows)
+		if err != nil {
+			return nil, err
 		}
+		items = append(items, item)
 	}
 
-	if args.Limit > 0 {
-		baseQuery += " LIMIT ?"
-		filterParams = append(filterParams, args.Limit)
-	}
-	if args.Offset > 0 {
-		baseQuery += " OFFSET ?"
-		filterParams = append(filterParams, args.Offset)
-	}
-
-	row := d.Instance.QueryRow(countQuery, filterParams...)
-	if err := row.Scan(&totalCount); err != nil {
-		totalCount = 0
-	}
-
-	return baseQuery, totalCount, filterParams
+	return items, nil
 }
